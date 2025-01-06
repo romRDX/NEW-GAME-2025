@@ -14,7 +14,7 @@ export const fakemonsData = [
       {
         id: 1,
         name: "lança-chamas",
-        power: 60,
+        power: 100, // 0---------------------------
         speed: 1.5,
         energy: 20,
       },
@@ -72,7 +72,7 @@ export const fakemonsData = [
     ],
   },
   {
-    id: 1,
+    id: 3,
     name: "Squirtle",
     stats: {
       HP: 100,

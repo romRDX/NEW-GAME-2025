@@ -13,32 +13,61 @@ function App() {
   const handleAttack = useCallback(
     (atkData: any) => {
       setBattleState((prevState: any) => {
-        const defensorCharacter =
-          prevState.firstCharacterCurrentData.id === atkData.atkOwner
-            ? prevState.firstCharacterCurrentData
-            : prevState.secondCharacterCurrentData;
+        const defensorTeam =
+          atkData.teamId === prevState.firstTeamId
+            ? prevState.secondTeamCurrentData
+            : prevState.firstTeamCurrentData;
+
+        let nextCharacterPosition =
+          atkData.teamId === prevState.firstTeamId
+            ? prevState.secondTeamActiveCharacter
+            : prevState.firstTeamActiveCharacter;
+
+        const defensorCharacter = defensorTeam[nextCharacterPosition];
 
         const defensorDamageReduction = defensorCharacter.stats.DEF * 0.5;
         const finalDamage = atkData.damage - defensorDamageReduction;
 
-        const enemyFinalHP = defensorCharacter.stats.HP - finalDamage * 0.1;
+        const enemyFinalHP = defensorCharacter.stats.HP - finalDamage * 0.3;
+
+        if (enemyFinalHP <= 0) {
+          nextCharacterPosition += 1;
+        }
+
+        console.log("----------------------");
+        console.log("ATK-DATA-1: ", defensorCharacter);
+        console.log("ATK-DATA-2: ", atkData.atkOwner);
+        console.log("ATK-DATA-3: ", nextCharacterPosition);
 
         const resultBattleState = {
           ...prevState,
           [`${
-            prevState.firstCharacterBaseData.id === atkData.atkOwner
-              ? "firstCharacterCurrentData"
-              : "secondCharacterCurrentData"
-          }`]: {
-            ...defensorCharacter,
-            stats: {
-              ...defensorCharacter.stats,
-              HP: enemyFinalHP.toFixed(2),
-            },
-          },
+            atkData.teamId === prevState.firstTeamId
+              ? "secondTeamActiveCharacter"
+              : "firstTeamActiveCharacter"
+          }`]: nextCharacterPosition,
+          [`${
+            atkData.teamId === prevState.firstTeamId
+              ? "secondTeamCurrentData"
+              : "firstTeamCurrentData"
+          }`]: defensorTeam.map((item: any) => {
+            if (item.id === defensorCharacter.id) {
+              return {
+                ...defensorCharacter,
+                stats: {
+                  ...defensorCharacter.stats,
+                  HP: enemyFinalHP.toFixed(2),
+                },
+              };
+            } else {
+              return item;
+            }
+          }),
         };
 
-        if (enemyFinalHP <= 0) {
+        console.log("ATK-DATA-4: ", resultBattleState);
+
+        if (nextCharacterPosition > defensorTeam.length - 1) {
           setBattleResult(atkData.atkOwner);
         }
 
@@ -50,28 +79,49 @@ function App() {
 
   useEffect(() => {
     const newBattle = {
-      firstCharacterBaseData: fakemonsData[0],
-      firstCharacterCurrentData: {
-        ...fakemonsData[0],
-        basic: fakemonsData[0].basic[0],
-        special: fakemonsData[0].special[0],
-        basicAction: () => {
-          const basicActionData = {
-            damage: fakemonsData[0].stats.ATK + fakemonsData[0].basic[0].power,
-            effect: {},
-            atkOwner: fakemonsData[0].id,
-          };
+      firstTeamActiveCharacter: 0,
+      firstTeamId: 111,
+      firstTeamBaseData: [fakemonsData[0], fakemonsData[1], fakemonsData[2]],
+      firstTeamCurrentData: [
+        ...[fakemonsData[0], fakemonsData[1], fakemonsData[2]].map((poke) => ({
+          ...poke,
+          basic: poke.basic[0],
+          special: poke.special[0],
+          basicAction: () => {
+            const basicActionData = {
+              damage: poke.stats.ATK + poke.basic[0].power,
+              effect: {},
+              atkOwner: poke.id,
+            };
 
-          handleAttack(basicActionData);
-        },
-      },
+            handleAttack(basicActionData);
+          },
+        })),
+      ],
 
-      secondCharacterBaseData: fakemonsData[1],
-      secondCharacterCurrentData: {
-        ...fakemonsData[1],
-        basic: fakemonsData[1].basic[1],
-        special: fakemonsData[1].special[1],
-      },
+      secondTeamActiveCharacter: 0,
+      secondTeamId: 222,
+      secondCharacterBaseData: [
+        fakemonsData[1],
+        fakemonsData[2],
+        fakemonsData[3],
+      ],
+      secondTeamCurrentData: [
+        ...[fakemonsData[1], fakemonsData[2], fakemonsData[3]].map((poke) => ({
+          ...poke,
+          basic: poke.basic[0],
+          special: poke.special[0],
+          basicAction: () => {
+            const basicActionData = {
+              damage: poke.stats.ATK + poke.basic[0].power,
+              effect: {},
+              atkOwner: poke.id,
+            };
+
+            handleAttack(basicActionData);
+          },
+        })),
+      ],
     };
 
     setBattleState(newBattle);
@@ -99,7 +149,12 @@ function App() {
               start={start}
               changeBattleState={handleAttack}
               battleEnded={battleResult}
-              data={battleState.firstCharacterCurrentData}
+              team={{
+                team: battleState.firstTeamCurrentData,
+                teamId: battleState.firstTeamId,
+              }}
+              battleState={battleState}
+              activeCharacter={battleState.firstTeamActiveCharacter}
             />
           </div>
           <div>
@@ -107,7 +162,12 @@ function App() {
               start={start}
               changeBattleState={handleAttack}
               battleEnded={battleResult}
-              data={battleState.secondCharacterCurrentData}
+              team={{
+                team: battleState.secondTeamCurrentData,
+                teamId: battleState.secondTeamId,
+              }}
+              battleState={battleState}
+              activeCharacter={battleState.secondTeamActiveCharacter}
             />
           </div>
         </div>
