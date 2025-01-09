@@ -15,7 +15,7 @@ const BattlerItem = ({
   changeBattleState: (data: any) => void;
   isActive: boolean;
 }) => {
-  const intervalRef = useRef(null);
+  const intervalRef = useRef<null | number>(null);
 
   //   console.log("RDX--xxx: ", data);
 
@@ -34,11 +34,11 @@ const BattlerItem = ({
 
       intervalRef.current = setInterval(atkAction, data.basic.speed * 1000);
     } else {
-      clearInterval(intervalRef.current);
+      clearInterval(intervalRef.current!);
     }
 
     return () => {
-      clearInterval(intervalRef.current);
+      clearInterval(intervalRef.current!);
     };
   }, [start, battleEnded, isActive]);
 

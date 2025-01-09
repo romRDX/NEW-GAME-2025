@@ -41,7 +41,7 @@ const PokeBattler = ({
   return (
     <div style={{ width: "250px", display: "flex", flexDirection: "column" }}>
       {team.team.length > 0 &&
-        team.team.map((teamItem, index) => (
+        team.team.map((teamItem: any, index: number) => (
           <BattlerItem
             teamId={team.teamId}
             data={teamItem}
